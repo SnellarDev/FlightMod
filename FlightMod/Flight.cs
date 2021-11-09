@@ -99,7 +99,7 @@ namespace FlightMod
         }
 
         private static GameObject CachedPlayerCamera;
-        public static float flySpeed = 10;
+        public static float flySpeed = 5;
         public static bool flying = false;
         private GameObject player;
     }
