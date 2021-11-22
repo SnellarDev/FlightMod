@@ -1,18 +1,30 @@
-﻿using MelonLoader;
+﻿using HarmonyLib;
+using MelonLoader;
 using System;
+using System.Reflection;
 using UnityEngine;
 
 namespace FlightMod
 {
     public class Flight : MelonMod
     {
-        public override void OnUpdate()
+        public override void OnSceneWasInitialized(int buildIndex, string sceneName)
         {
-            if (!PlayerExtensions.IsInWorld() && flying)
+            if(buildIndex == -1)
+                try { Instance.Patch(AccessTools.Method(typeof(NetworkManager), "OnLeftRoom", null, null), GetPatch("OnLeftRoom")); } catch (Exception e) { MelonLogger.Error($"Error Patching OnLeftRoom => {e.Message}"); }
+        }
+
+        private static void OnLeftRoom()
+        {
+            if(flying)
             {
                 PlayerExtensions.LocalPlayer.gameObject.GetComponent<CharacterController>().enabled = true;
                 flying = false;
             }
+        }
+
+        public override void OnUpdate()
+        {
             if (Input.GetKeyDown(KeyCode.F) || Input.GetKeyDown(KeyCode.JoystickButton0))
             {
                 if (PlayerExtensions.IsInWorld() && PlayerExtensions.LocalPlayer != null)
@@ -49,58 +61,69 @@ namespace FlightMod
 
                     if (Math.Abs(Input.GetAxis("Horizontal")) != 0f)
                         player.transform.position += GetPlayerCamera.transform.right * (number * Time.deltaTime * Input.GetAxis("Horizontal"));
+
                     if (Input.GetAxis("Oculus_CrossPlatform_SecondaryThumbstickVertical") < 0f)
                         player.transform.position += GetPlayerCamera.transform.up * (number * Time.deltaTime * Input.GetAxisRaw("Oculus_CrossPlatform_SecondaryThumbstickVertical"));
+
                     if (Input.GetAxis("Oculus_CrossPlatform_SecondaryThumbstickVertical") > 0f)
                         player.transform.position += GetPlayerCamera.transform.up * (number * Time.deltaTime * Input.GetAxisRaw("Oculus_CrossPlatform_SecondaryThumbstickVertical"));
                 }
 
                 for (int i = 0; i < keys.Length; i++) switch (Input.GetKey(keys[i]))
-                    {
-                        case true when (i == 0):
-                            player.transform.position += GetPlayerCamera.transform.forward * number * Time.deltaTime;
-                            break;
-
-                        case true when (i == 1):
-                            player.transform.position -= GetPlayerCamera.transform.right * number * Time.deltaTime;
-                            break;
-
-                        case true when (i == 2):
-                            player.transform.position -= GetPlayerCamera.transform.forward * number * Time.deltaTime;
-                            break;
-
-                        case true when (i == 3):
-                            player.transform.position += GetPlayerCamera.transform.right * number * Time.deltaTime;
-                            break;
-
-                        case true when (i == 3):
-                            player.transform.position += Vector3.up * number * Time.deltaTime;
-                            break;
-
-                        case true when (i == 5):
-                            player.transform.position -= Vector3.up * number * Time.deltaTime;
-                            break;
-                    }
+                {
+                    case true when (i == 0):
+                        player.transform.position += GetPlayerCamera.transform.forward * number * Time.deltaTime;
+                        break;
+                
+                    case true when (i == 1):
+                        player.transform.position -= GetPlayerCamera.transform.right * number * Time.deltaTime;
+                        break;
+                
+                    case true when (i == 2):
+                        player.transform.position -= GetPlayerCamera.transform.forward * number * Time.deltaTime;
+                        break;
+                
+                    case true when (i == 3):
+                        player.transform.position += GetPlayerCamera.transform.right * number * Time.deltaTime;
+                        break;
+                
+                    case true when (i == 3):
+                        player.transform.position += Vector3.up * number * Time.deltaTime;
+                        break;
+                
+                    case true when (i == 5):
+                        player.transform.position -= Vector3.up * number * Time.deltaTime;
+                        break;
+                }
             }
         }
-
-        private KeyCode[] keys = new KeyCode[] { KeyCode.W, KeyCode.A, KeyCode.S, KeyCode.D, KeyCode.E, KeyCode.Q };
 
         public static GameObject GetPlayerCamera
         {
             get
             {
                 if (CachedPlayerCamera == null)
-                {
                     CachedPlayerCamera = GameObject.Find("Camera (eye)");
-                }
+
                 return CachedPlayerCamera;
             }
         }
 
+        private static HarmonyMethod GetPatch(string name)
+        {
+            return new HarmonyMethod(typeof(Flight).GetMethod(name, BindingFlags.Static | BindingFlags.NonPublic));
+        }
+
+        public static HarmonyLib.Harmony Instance = new HarmonyLib.Harmony("Patches");
+
+        private readonly KeyCode[] keys = new KeyCode[] { KeyCode.W, KeyCode.A, KeyCode.S, KeyCode.D, KeyCode.E, KeyCode.Q };
+
         private static GameObject CachedPlayerCamera;
+
         public static float flySpeed = 5;
+        
         public static bool flying = false;
+        
         private GameObject player;
     }
 }
