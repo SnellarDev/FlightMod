@@ -87,7 +87,7 @@ namespace FlightMod
                         player.transform.position += GetPlayerCamera.transform.right * number * Time.deltaTime;
                         break;
                 
-                    case true when (i == 3):
+                    case true when (i == 4):
                         player.transform.position += Vector3.up * number * Time.deltaTime;
                         break;
                 
@@ -121,7 +121,7 @@ namespace FlightMod
         private static GameObject CachedPlayerCamera;
 
         public static float flySpeed = 5;
-        
+
         public static bool flying = false;
         
         private GameObject player;
