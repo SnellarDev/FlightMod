@@ -10,7 +10,7 @@ namespace FlightMod
     {
         public override void OnApplicationStart()
         {
-            try { harmonyInstance.Patch(AccessTools.Method(typeof(NetworkManager), "OnLeftRoom", null, null), GetPatch("OnLeftRoom")); } catch (Exception e) { MelonLogger.Error($"Error Patching OnLeftRoom => {e.Message}"); }
+            try { HarmonyInstance.Patch(AccessTools.Method(typeof(NetworkManager), "OnLeftRoom", null, null), GetPatch("OnLeftRoom")); } catch (Exception e) { MelonLogger.Error($"Error Patching OnLeftRoom => {e.Message}"); }
         }
     
 
